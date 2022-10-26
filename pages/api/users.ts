@@ -1,7 +1,11 @@
+import { allowMethods } from "./../../src/_middleware/allow-method.middleware";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { ResponseFuncs } from "../../_interfaces/types";
-import DatabaseHelper from "../../_helpers/connection";
-import UserModel from "../../_models/user";
+import { use } from "next-api-route-middleware";
+import DatabaseHelper from "../../src/_helpers/connection";
+import { ResponseFuncs } from "../../src/_interfaces/types";
+import { auth } from "../../src/_middleware/auth.middleware";
+import UserModel from "../../src/_models/user";
+import { captureErrors } from "../../src/_middleware/error.middleware";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   //capture request method, we type it as a key of ResponseFunc to reduce typing later
@@ -14,6 +18,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const handleCase: ResponseFuncs = {
     // RESPONSE FOR GET REQUESTS
     GET: async (req: NextApiRequest, res: NextApiResponse) => {
+      req.headers.authorization = "Admin";
+      console.log(req.headers.authorization);
       await DatabaseHelper.getInstance().connect; // connect to database
       res.json(await UserModel.find({}).catch(catcher));
     },
@@ -30,4 +36,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   else res.status(400).json({ error: "No Response for This Request" });
 };
 
-export default handler;
+export default use(
+  captureErrors,
+  allowMethods(["GET", "POST"]),
+  // auth(["Admin"]),
+  handler
+);

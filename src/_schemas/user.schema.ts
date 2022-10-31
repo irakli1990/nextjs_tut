@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { UserTypes } from "../_interfaces/user-types";
 const Schema = mongoose.Schema;
 
 const user = new Schema({
@@ -9,13 +10,15 @@ const user = new Schema({
   email: {
     type: String,
     required: true,
+    unique: true,
   },
-  password: {
+  role: {
     type: String,
     required: true,
+    enum: [UserTypes.Admin, UserTypes.User],
   },
 });
 
-const UserModel = mongoose.models.User || mongoose.model("User", user);
+const UserSchema = mongoose.models.User || mongoose.model("User", user);
 
-export default UserModel;
+export default UserSchema;
